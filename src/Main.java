@@ -1,14 +1,13 @@
-import java.util.Arrays;
-import java.util.Random;
+// Main.java
+import java.util.*;
 
 public class Main {
 
     public static Product[] generateProducts(int size) {
         Product[] products = new Product[size];
         Random rand = new Random();
-
         for (int i = 0; i < size; i++) {
-            int id = rand.nextInt(200000) + 1;
+            int id = rand.nextInt(200000) + 1; // IDs 1–200,000
             products[i] = new Product(
                     id,
                     "Product" + i,
@@ -21,7 +20,7 @@ public class Main {
     }
 
     public static void sortById(Product[] products) {
-        Arrays.sort(products, (a, b) -> Integer.compare(a.getProductId(), b.getProductId()));
+        Arrays.sort(products, Comparator.comparingInt(Product::getProductId));
     }
 
     public static long measureSequential(Product[] products, int target) {
@@ -39,19 +38,20 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        int size = 100000;
-
+        int size = 100_000;
         System.out.println("Generating products...");
         Product[] products = generateProducts(size);
 
+        // Copy and sort for binary search
         Product[] sortedProducts = Arrays.copyOf(products, products.length);
         sortById(sortedProducts);
 
-        // Test cases
-        int bestCaseId = products[0].getProductId();          // first element
-        int avgCaseId = products[size / 2].getProductId();    // middle
-        int worstCaseId = -1;                                 // not found
+        // Test case IDs
+        int bestCaseId = products[0].getProductId();        // first element
+        int avgCaseId = products[size / 2].getProductId();  // middle element
+        int worstCaseId = -1;                               // not found
 
+        // Measure sequential and binary searches
         long seqBest = measureSequential(products, bestCaseId);
         long binBest = measureBinary(sortedProducts, bestCaseId);
 
@@ -61,19 +61,56 @@ public class Main {
         long seqWorst = measureSequential(products, worstCaseId);
         long binWorst = measureBinary(sortedProducts, worstCaseId);
 
-        // Output
-        System.out.println("\nSearch Performance Results\n");
+        long improvement = seqAvg / binAvg;
 
-        System.out.println("Best Case:");
-        System.out.println("Sequential = " + seqBest + " ns");
-        System.out.println("Binary = " + binBest + " ns\n");
+        // Hybrid catalog setup
+        HybridProductCatalog catalog = new HybridProductCatalog(size + 10);
+        long hybridInsertTotal = 0;
+        long hybridSearchTotal = 0;
 
-        System.out.println("Average Case:");
-        System.out.println("Sequential = " + seqAvg + " ns");
-        System.out.println("Binary = " + binAvg + " ns\n");
+        Random rand = new Random();
 
-        System.out.println("Worst Case:");
-        System.out.println("Sequential = " + seqWorst + " ns");
-        System.out.println("Binary = " + binWorst + " ns");
+        for (Product p : products) {
+            long start = System.nanoTime();
+            catalog.addProduct(p);
+            long end = System.nanoTime();
+            hybridInsertTotal += (end - start);
+        }
+
+        // Measure hybrid name searches (1000 random lookups)
+        for (int i = 0; i < 1000; i++) {
+            int idx = rand.nextInt(size);
+            Product toSearch = products[idx];
+            long start = System.nanoTime();
+            catalog.searchByName(toSearch.getProductName());
+            long end = System.nanoTime();
+            hybridSearchTotal += (end - start);
+        }
+
+        double hybridInsertAvg = hybridInsertTotal / 1_000_000.0 / size;
+        double hybridSearchAvg = hybridSearchTotal / 1_000_000.0 / 1000;
+
+        // Output in assignment-style format
+        System.out.println("================================================================");
+        System.out.println("TECHMART SEARCH PERFORMANCE ANALYSIS (n = " + size + " products)");
+        System.out.println("================================================================");
+
+        System.out.println("\nSEQUENTIAL SEARCH:");
+        System.out.printf("Best Case (ID found at position 0): %.3f ms%n", seqBest / 1_000_000.0);
+        System.out.printf("Average Case (random ID): %.3f ms%n", seqAvg / 1_000_000.0);
+        System.out.printf("Worst Case (ID not found): %.3f ms%n", seqWorst / 1_000_000.0);
+
+        System.out.println("\nBINARY SEARCH:");
+        System.out.printf("Best Case (ID at middle): %.3f ms%n", binBest / 1_000_000.0);
+        System.out.printf("Average Case (random ID): %.3f ms%n", binAvg / 1_000_000.0);
+        System.out.printf("Worst Case (ID not found): %.3f ms%n", binWorst / 1_000_000.0);
+
+        System.out.printf("\nPERFORMANCE IMPROVEMENT: Binary search is ~%dx faster on average%n", improvement);
+
+        System.out.println("\nHYBRID NAME SEARCH:");
+        System.out.printf("Average search time: %.3f ms%n", hybridSearchAvg);
+        System.out.printf("Average insert time: %.3f ms%n", hybridInsertAvg);
+
+        System.out.println("================================================================");
     }
 }
