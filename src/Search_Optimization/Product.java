@@ -1,3 +1,5 @@
+package Search_Optimization;
+
 public class Product {
     // Attributes
     private int productId;       // Unique identifier

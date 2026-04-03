@@ -1,3 +1,5 @@
+package Search_Optimization;
+
 public class ProductSearch {
 
     // 1. Sequential Search by ID
