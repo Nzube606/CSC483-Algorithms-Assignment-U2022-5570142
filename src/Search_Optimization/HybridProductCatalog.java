@@ -1,3 +1,5 @@
+package Search_Optimization;
+
 import java.util.*;
 
 public class HybridProductCatalog {

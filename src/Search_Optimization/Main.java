@@ -1,4 +1,4 @@
-// Main.java
+package Search_Optimization;// Search_Optimization.Main.java
 import java.util.*;
 
 public class Main {
@@ -10,7 +10,7 @@ public class Main {
             int id = rand.nextInt(200000) + 1; // IDs 1–200,000
             products[i] = new Product(
                     id,
-                    "Product" + i,
+                    "Search_Optimization.Product" + i,
                     "Category" + (i % 5),
                     rand.nextDouble() * 1000,
                     rand.nextInt(100)
