@@ -1,234 +1,200 @@
 package Sorting;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class SortingExperiment {
 
-    // Number of timed runs per algorithm/dataset combination.
-    // The average across all runs smooths out JVM warm-up and OS scheduling noise.
     private static final int RUNS = 5;
 
-    // =========================================================================
-    // CORE MEASUREMENT ENGINE
-    // Accepts RUNS pre-built Runnable (each wrapping a fresh array copy),
-    // executes them in sequence, accumulates total time, and returns an
-    // ExperimentResult with the averaged time + final run's comparison/swap counts.
-    // =========================================================================
-
-    /**
-     * Runs the algorithm RUNS times and returns averaged timing results.
-     *
-     * @param original         the original unsorted array (unused here, kept for context)
-     * @param algorithmSupplier array of RUNS Runnables, each containing a fresh array copy
-     * @return ExperimentResult with avg time (ms), comparisons, and swaps
-     */
-    public static ExperimentResult runAndMeasure(int[] original, Runnable[] algorithmSupplier) {
-        double totalTime = 0;
-        ExperimentResult lastResult = null;
+    // =====================================================================
+    // CORE MEASUREMENT - Returns mean time, std dev, comparisons & swaps
+    // =====================================================================
+    public static ExperimentResultWithTimes runAndMeasure(int[] original, String algorithm) {
+        List<Double> runTimes = new ArrayList<>();
+        long finalComparisons = 0;
+        long finalSwaps = 0;
 
         for (int r = 0; r < RUNS; r++) {
-            SortingAlgorithms.resetCounters();  // Clear counts before each run
+            int[] copy = Arrays.copyOf(original, original.length);
+            SortingAlgorithms.resetCounters();
 
             long start = System.nanoTime();
-            algorithmSupplier[r].run();         // Execute this run's sort
-            long end   = System.nanoTime();
 
-            double runTimeMs = (end - start) / 1_000_000.0;
-            totalTime += runTimeMs;
-
-            // Save result from this run; comparisons/swaps are deterministic
-            // (same input → same count every run), so the last run's values are reliable
-            lastResult = new ExperimentResult(
-                    runTimeMs,
-                    SortingAlgorithms.getComparisons(),
-                    SortingAlgorithms.getSwaps()
-            );
-        }
-
-        double avgTime = totalTime / RUNS;  // Average execution time over all runs
-        return new ExperimentResult(avgTime, lastResult.comparisons, lastResult.swaps);
-    }
-
-    // =========================================================================
-    // PER-ALGORITHM MEASUREMENT WRAPPERS
-    // Each method pre-creates RUNS independent array copies so that run 2–5
-    // don't accidentally sort an already-sorted array (which would skew results).
-    // =========================================================================
-
-    /** Measures Insertion Sort: RUNS fresh copies, averaged time */
-    public static ExperimentResult measureInsertion(int[] original) {
-        Runnable[] runs = new Runnable[RUNS];
-        for (int r = 0; r < RUNS; r++) {
-            int[] copy = Arrays.copyOf(original, original.length); // Fresh unsorted copy
-            runs[r] = () -> SortingAlgorithms.insertionSort(copy);
-        }
-        return runAndMeasure(original, runs);
-    }
-
-    /** Measures Merge Sort: RUNS fresh copies, averaged time */
-    public static ExperimentResult measureMerge(int[] original) {
-        Runnable[] runs = new Runnable[RUNS];
-        for (int r = 0; r < RUNS; r++) {
-            int[] copy = Arrays.copyOf(original, original.length);
-            runs[r] = () -> SortingAlgorithms.mergeSort(copy, 0, copy.length - 1);
-        }
-        return runAndMeasure(original, runs);
-    }
-
-    /** Measures Quick Sort: RUNS fresh copies, averaged time */
-    public static ExperimentResult measureQuick(int[] original) {
-        Runnable[] runs = new Runnable[RUNS];
-        for (int r = 0; r < RUNS; r++) {
-            int[] copy = Arrays.copyOf(original, original.length);
-            runs[r] = () -> SortingAlgorithms.quickSort(copy, 0, copy.length - 1);
-        }
-        return runAndMeasure(original, runs);
-    }
-
-    /** Measures Heap Sort: RUNS fresh copies, averaged time */
-    public static ExperimentResult measureHeap(int[] original) {
-        Runnable[] runs = new Runnable[RUNS];
-        for (int r = 0; r < RUNS; r++) {
-            int[] copy = Arrays.copyOf(original, original.length);
-            runs[r] = () -> SortingAlgorithms.heapSort(copy);
-        }
-        return runAndMeasure(original, runs);
-    }
-
-    // =========================================================================
-    // TABLE FORMATTING HELPERS
-    // =========================================================================
-
-    // Reusable horizontal borderline for the output table
-    static String border = "+" + "-".repeat(16) + "+" + "-".repeat(14) + "+" +
-            "-".repeat(14) + "+" + "-".repeat(17) + "+" + "-".repeat(16) + "+";
-
-    /**
-     * Prints a single formatted data row in the results table.
-     * Swaps column accepts a String to allow "N/A" for Merge Sort.
-     */
-    public static void printRow(int size, String algorithm,
-                                double timeMs, long comparisons, String swaps) {
-        System.out.printf("| %-14d | %-12s | %-12.4f | %-15s | %-14s |%n",
-                size, algorithm, timeMs,
-                String.format("%,d", comparisons),  // e.g. 1,234,567
-                swaps);
-    }
-
-    /**
-     * Prints a full results table for one dataset type (e.g. Random, Sorted).
-     * Iterates over all input sizes and runs all four algorithms for each.
-     * Insertion Sort is flagged as TOO SLOW for n = 100,000 to avoid long waits.
-     */
-    public static void printTableForDataset(String datasetName, int[] sizes) {
-        // Section header for this dataset
-        System.out.println();
-        System.out.println("=".repeat(83));
-        System.out.printf("  SORTING ALGORITHMS COMPARISON - %s%n", datasetName.toUpperCase());
-        System.out.println("=".repeat(83));
-
-        // Column headers
-        System.out.println(border);
-        System.out.printf("| %-14s | %-12s | %-12s | %-15s | %-14s |%n",
-                "Input Size", "Algorithm", "Time (ms)", "Comparisons", "Swaps");
-        System.out.println(border);
-
-        for (int size : sizes) {
-            // Generate the dataset for this size and type
-            int[] data = generateDataset(datasetName, size);
-
-            // --- Insertion Sort ---
-            // O(n²) makes it impractically slow at n=100,000; flag it rather than freeze
-            if (size <= 10000) {
-                ExperimentResult ins = measureInsertion(data);
-                printRow(size, "Insertion", ins.time, ins.comparisons,
-                        String.format("%,d", ins.swaps));
-            } else {
-                System.out.printf("| %-14d | %-12s | %-12s | %-15s | %-14s |%n",
-                        size, "Insertion", "TOO SLOW", "-", "-");
+            switch (algorithm) {
+                case "Insertion" -> SortingAlgorithms.insertionSort(copy);
+                case "Merge"     -> SortingAlgorithms.mergeSort(copy, 0, copy.length - 1);
+                case "Quick"     -> SortingAlgorithms.quickSort(copy, 0, copy.length - 1);
             }
 
-            // --- Merge Sort ---
-            // Swaps shown as N/A: merge sort copies data into temp arrays
-            // rather than performing in-place swaps, so swap count is not meaningful
-            ExperimentResult merge = measureMerge(data);
-            printRow(size, "Merge", merge.time, merge.comparisons, "N/A");
+            long end = System.nanoTime();
+            double timeMs = (end - start) / 1_000_000.0;
 
-            // --- Quick Sort ---
-            ExperimentResult quick = measureQuick(data);
-            printRow(size, "Quick", quick.time, quick.comparisons,
-                    String.format("%,d", quick.swaps));
-
-            // --- Heap Sort ---
-            ExperimentResult heap = measureHeap(data);
-            printRow(size, "Heap", heap.time, heap.comparisons,
-                    String.format("%,d", heap.swaps));
-
-            System.out.println(border); // Separator after each size block
+            runTimes.add(timeMs);
+            finalComparisons = SortingAlgorithms.getComparisons();
+            finalSwaps = SortingAlgorithms.getSwaps();
         }
+
+        double meanTime = runTimes.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        double stdDev = calculateStdDev(runTimes);
+
+        return new ExperimentResultWithTimes(meanTime, stdDev, finalComparisons, finalSwaps, runTimes);
     }
 
-    /**
-     * Routes dataset generation to the correct DataGenerator method by name.
-     * Keeps printTableForDataset() clean by centralising the switch logic here.
-     */
+    private static double calculateStdDev(List<Double> values) {
+        if (values.size() < 2) return 0.0;
+        double mean = values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        double variance = values.stream()
+                .mapToDouble(v -> Math.pow(v - mean, 2))
+                .average()
+                .orElse(0.0);
+        return Math.sqrt(variance);
+    }
+
+    // =====================================================================
+    // SELF-CONTAINED DATASET GENERATOR (Fixed the missing method)
+    // =====================================================================
     public static int[] generateDataset(String type, int size) {
-        switch (type) {
-            case "Random":        return DataGenerator.generateRandom(size);
-            case "Sorted":        return DataGenerator.generateSorted(size);
-            case "Reverse":       return DataGenerator.generateReverseSorted(size);
-            case "Nearly Sorted": return DataGenerator.generateNearlySorted(size);
-            case "Duplicates":    return DataGenerator.generateDuplicates(size);
-            default:              return DataGenerator.generateRandom(size);
+        int[] arr = new int[size];
+        Random rand = new Random(42);   // Fixed seed for reproducible results
+
+        switch (type.toLowerCase()) {
+            case "random":
+                for (int i = 0; i < size; i++) {
+                    arr[i] = rand.nextInt(1_000_000);
+                }
+                break;
+
+            case "sorted":
+                for (int i = 0; i < size; i++) {
+                    arr[i] = i;
+                }
+                break;
+
+            case "reverse":
+                for (int i = 0; i < size; i++) {
+                    arr[i] = size - 1 - i;
+                }
+                break;
+
+            case "nearly sorted":
+                for (int i = 0; i < size; i++) {
+                    arr[i] = i;
+                }
+                // Disrupt 10% of the elements
+                int disruptions = (int) (size * 0.10);
+                for (int k = 0; k < disruptions; k++) {
+                    int idx = rand.nextInt(size);
+                    arr[idx] = rand.nextInt(1_000_000);
+                }
+                break;
+
+            case "duplicates":
+                // Only 10 distinct values
+                for (int i = 0; i < size; i++) {
+                    arr[i] = rand.nextInt(10);
+                }
+                break;
+
+            default:
+                for (int i = 0; i < size; i++) {
+                    arr[i] = rand.nextInt(1_000_000);
+                }
+        }
+        return arr;
+    }
+
+    // =====================================================================
+    // TABLE PRINTING WITH STATISTICS
+    // =====================================================================
+    public static void printTableForDataset(String datasetName, int[] sizes) {
+        System.out.println();
+        System.out.println("=".repeat(110));
+        System.out.printf(" SORTING ALGORITHMS COMPARISON - %s%n", datasetName.toUpperCase());
+        System.out.println("=".repeat(110));
+
+        System.out.println("+----------------+--------------+-------------+---------------+----------------+----------------------+");
+        System.out.printf("| %-14s | %-12s | %-11s | %-13s | %-14s | %-20s |%n",
+                "Input Size", "Algorithm", "Mean (ms)", "Std Dev (ms)", "Comparisons", "Swaps");
+        System.out.println("+----------------+--------------+-------------+---------------+----------------+----------------------+");
+
+        for (int size : sizes) {
+            int[] data = generateDataset(datasetName, size);
+
+            // Insertion Sort
+            if (size <= 10000) {
+                ExperimentResultWithTimes ins = runAndMeasure(data, "Insertion");
+                printStatRow(size, "Insertion", ins);
+            } else {
+                System.out.printf("| %-14d | %-12s | %-11s | %-13s | %-14s | %-20s |%n",
+                        size, "Insertion", "TOO SLOW", "-", "-", "-");
+            }
+
+            // Merge Sort
+            ExperimentResultWithTimes mergeRes = runAndMeasure(data, "Merge");
+            printStatRow(size, "Merge", mergeRes);
+
+            // Quick Sort
+            ExperimentResultWithTimes quickRes = runAndMeasure(data, "Quick");
+            printStatRow(size, "Quick", quickRes);
+
+            System.out.println("+----------------+--------------+-------------+---------------+----------------+----------------------+");
         }
     }
 
-    // =========================================================================
-    // MAIN — Entry point: runs the full experiment across all datasets and sizes
-    // =========================================================================
-    public static void main(String[] args) {
+    private static void printStatRow(int size, String algorithm, ExperimentResultWithTimes result) {
+        String swapsStr = algorithm.equals("Merge") ? "N/A" : String.format("%,d", result.swaps);
 
-        int[]    sizes    = {100, 1000, 10000, 100000};
+        System.out.printf("| %-14d | %-12s | %11.3f | %13.3f | %,14d | %-20s |%n",
+                size, algorithm, result.meanTime, result.stdDev, result.comparisons, swapsStr);
+    }
+
+    // =====================================================================
+    // MAIN
+    // =====================================================================
+    public static void main(String[] args) {
+        int[] sizes = {100, 1000, 10000, 100000};
         String[] datasets = {"Random", "Sorted", "Reverse", "Nearly Sorted", "Duplicates"};
 
-        // Overall experiment banner
-        System.out.println("=".repeat(83));
-        System.out.println("       SORTING PERFORMANCE ANALYSIS — EMPIRICAL STUDY");
-        System.out.println("       Algorithms: Insertion, Merge, Quick, Heap");
-        System.out.println("       Each time value = average of " + RUNS + " runs");
-        System.out.println("=".repeat(83));
+        System.out.println("=".repeat(110));
+        System.out.println(" SORTING PERFORMANCE ANALYSIS — EMPIRICAL + STATISTICAL STUDY");
+        System.out.println(" Algorithms: Insertion Sort, Merge Sort, Quick Sort");
+        System.out.println(" Time values = average of " + RUNS + " runs | Std Dev shows consistency");
+        System.out.println("=".repeat(110));
 
-        // Print one full table per dataset type
         for (String dataset : datasets) {
             printTableForDataset(dataset, sizes);
         }
 
-        // Final conclusions summarising expected algorithmic behaviour
-        System.out.println();
-        System.out.println("=".repeat(83));
-        System.out.println("CONCLUSIONS:");
-        System.out.println("- Quick Sort is fastest on average for random data");
-        System.out.println("- Insertion Sort is competitive only for n <= 1,000");
-        System.out.println("- Merge Sort provides consistent performance regardless of data order");
-        System.out.println("- Heap Sort uses O(1) extra space but is slower than Quick Sort in practice");
-        System.out.println("- Insertion Sort excels on nearly-sorted data due to early loop termination");
-        System.out.println("- Quick Sort may degrade on sorted/reverse data without pivot randomization");
-        System.out.println("=".repeat(83));
+        System.out.println("\n" + "=".repeat(110));
+        System.out.println("STATISTICAL SUMMARY:");
+        System.out.println("- Mean = Average runtime across 5 runs");
+        System.out.println("- Std Dev = Measure of variability (lower = more consistent)");
+        System.out.println("- Merge Sort usually has lower Std Dev (more predictable)");
+        System.out.println("=".repeat(110));
+
+        System.out.println("\nCONCLUSIONS:");
+        System.out.println("- Quick Sort is fastest on random and nearly-sorted data");
+        System.out.println("- Insertion Sort performs well only for small n and nearly-sorted inputs");
+        System.out.println("- Merge Sort is the most consistent across all data types");
+        System.out.println("- Insertion Sort becomes impractical for large random/reverse data");
     }
 }
 
 // =============================================================================
-// ExperimentResult — simple data carrier for one algorithm run's metrics.
-// Holds averaged time (ms) and comparison/swap counts from the final run.
+// Result Holder Class
 // =============================================================================
-class ExperimentResult {
-    double time;        // Average execution time in milliseconds across runs
-    long comparisons;   // Number of element comparisons made during sorting
-    long swaps;         // Number of swaps or assignments made during sorting
+class ExperimentResultWithTimes {
+    double meanTime;
+    double stdDev;
+    long comparisons;
+    long swaps;
+    List<Double> individualTimes;
 
-    ExperimentResult(double time, long comparisons, long swaps) {
-        this.time = time;
+    ExperimentResultWithTimes(double meanTime, double stdDev, long comparisons, long swaps, List<Double> times) {
+        this.meanTime = meanTime;
+        this.stdDev = stdDev;
         this.comparisons = comparisons;
         this.swaps = swaps;
+        this.individualTimes = times;
     }
 }
