@@ -1,8 +1,31 @@
-package Search_Optimization;// Search_Optimization.Main.java
+package Search_Optimization; // Search_Optimization.Main.java
+
 import java.util.*;
 
+/**
+ * Main driver class for TechMart search performance analysis.
+ *
+ * <p>This class generates product data, measures and compares the performance
+ * of sequential search vs binary search on product IDs, and demonstrates the
+ * hybrid catalog's name-based search capabilities. Results are formatted for
+ * assignment submission.</p>
+ *
+ * @author Ilodigwe Nzube
+ * @version 1.0
+ * @since 2024
+ */
 public class Main {
 
+    /**
+     * Generates an array of random products for testing.
+     *
+     * <p>Each product receives a random ID (1-200,000), a unique name,
+     * a category based on index modulo 5, a random price (0-1000), and
+     * a random stock quantity (0-99).</p>
+     *
+     * @param size the number of products to generate
+     * @return an array of randomly generated Product objects
+     */
     public static Product[] generateProducts(int size) {
         Product[] products = new Product[size];
         Random rand = new Random();
@@ -19,10 +42,22 @@ public class Main {
         return products;
     }
 
+    /**
+     * Sorts an array of products by their product ID in ascending order.
+     *
+     * @param products the array of products to sort (modified in-place)
+     */
     public static void sortById(Product[] products) {
         Arrays.sort(products, Comparator.comparingInt(Product::getProductId));
     }
 
+    /**
+     * Measures the execution time of sequential search for a given target ID.
+     *
+     * @param products the array to search through
+     * @param target   the product ID to search for
+     * @return the search duration in nanoseconds
+     */
     public static long measureSequential(Product[] products, int target) {
         long start = System.nanoTime();
         ProductSearch.sequentialSearchById(products, target);
@@ -30,6 +65,13 @@ public class Main {
         return end - start;
     }
 
+    /**
+     * Measures the execution time of binary search for a given target ID.
+     *
+     * @param products the sorted array to search through
+     * @param target   the product ID to search for
+     * @return the search duration in nanoseconds
+     */
     public static long measureBinary(Product[] products, int target) {
         long start = System.nanoTime();
         ProductSearch.binarySearchById(products, target);
@@ -37,6 +79,20 @@ public class Main {
         return end - start;
     }
 
+    /**
+     * Main entry point that runs the complete search performance analysis.
+     *
+     * <p>This method performs the following steps:</p>
+     * <ol>
+     *   <li>Generates 100,000 random products</li>
+     *   <li>Measures sequential and binary search performance for best, average, and worst cases</li>
+     *   <li>Calculates the performance improvement factor</li>
+     *   <li>Tests the hybrid catalog's name-based search and insertion times</li>
+     *   <li>Prints formatted results for assignment submission</li>
+     * </ol>
+     *
+     * @param args command-line arguments (not used)
+     */
     public static void main(String[] args) {
         int size = 100_000;
         System.out.println("Generating products...");
@@ -70,6 +126,7 @@ public class Main {
 
         Random rand = new Random();
 
+        // Measure hybrid catalog insertion times for all products
         for (Product p : products) {
             long start = System.nanoTime();
             catalog.addProduct(p);
