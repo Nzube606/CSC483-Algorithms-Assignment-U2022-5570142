@@ -94,7 +94,7 @@ public class SortingAlgorithms {
         }
 
         // Copy any remaining elements from the left half
-        while (i <= mid)  { temp[k++] = arr[i++]; swaps++; }
+        while (i <= mid)   { temp[k++] = arr[i++]; swaps++; }
 
         // Copy any remaining elements from the right half
         while (j <= right) { temp[k++] = arr[j++]; swaps++; }
@@ -112,98 +112,46 @@ public class SortingAlgorithms {
     //           everything > pivot is right, then recursively sort both sides.
     // In-place. Not stable. Fast in practice due to cache efficiency.
     // =========================================================================
-    // Quick Sort
     public static void quickSort(int[] arr, int low, int high) {
         if (low < high) {
             int pi = partition(arr, low, high);
-            quickSort(arr, low, pi - 1);
-            quickSort(arr, pi + 1, high);
-        }
-    }
-
-    private static int partition(int[] arr, int low, int high) {
-        // --- FIX: Randomly pick a pivot and swap it to the end ---
-        // Without this, sorted/reverse-sorted input causes O(n) recursion
-        // depth (every partition picks the smallest/largest element as pivot),
-        // which overflows the call stack at large n (e.g. 100,000)
-        int randomIndex = low + (int)(Math.random() * (high - low + 1));
-        swap(arr, randomIndex, high);   // Move random pivot to end (Lomuto scheme)
-
-        int pivot = arr[high];
-        int i = low - 1;
-
-        for (int j = low; j < high; j++) {
-            comparisons++;
-            if (arr[j] <= pivot) {
-                i++;
-                swap(arr, i, j);
-            }
-        }
-
-        swap(arr, i + 1, high);
-        return i + 1;
-    }
-    // =========================================================================
-    // HEAP SORT  —  O(n log n) always (best, average, worst)
-    // Strategy: build a max-heap from the array, then repeatedly extract
-    //           the maximum element (root) and place it at the end.
-    // In-place. Not stable. Uses O(1) extra memory.
-    // =========================================================================
-    public static void heapSort(int[] arr) {
-        int n = arr.length;
-
-        // --- Phase 1: Build a max-heap ---
-        // Start from the last non-leaf node (n/2 - 1) and heapify downward.
-        // After this loop, arr[0] holds the largest element.
-        for (int i = n / 2 - 1; i >= 0; i--) {
-            heapify(arr, n, i);
-        }
-
-        // --- Phase 2: Extract elements from heap one by one ---
-        // Swap root (current max) with the last unsorted element,
-        // reduce heap size by 1, then restore heap property.
-        for (int i = n - 1; i > 0; i--) {
-            swap(arr, 0, i);    // Move current maximum to its sorted position
-            heapify(arr, i, 0); // Re-heapify the reduced heap (size = i)
+            quickSort(arr, low, pi - 1);   // Recursively sort left of pivot
+            quickSort(arr, pi + 1, high);  // Recursively sort right of pivot
         }
     }
 
     /**
-     * Ensures the subtree rooted at index i satisfies the max-heap property.
-     * Assumes both child subtrees are already valid max-heaps.
-     *
-     * @param arr  the array representing the heap
-     * @param n    the current heap size (elements beyond n are already sorted)
-     * @param i    the root index of the subtree to heapify
+     * Lomuto partition scheme:
+     * - Uses a randomly chosen pivot to avoid O(n²) on sorted/reverse input.
+     * - Scans left-to-right; swaps elements <= pivot to the left partition.
+     * - Places pivot at its final sorted position and returns that index.
      */
-    private static void heapify(int[] arr, int n, int i) {
-        int largest = i;        // Assume the root is the largest
-        int left  = 2 * i + 1; // Left child index in zero-based array
-        int right = 2 * i + 2; // Right child index in zero-based array
+    private static int partition(int[] arr, int low, int high) {
+        // Randomly pick a pivot and swap it to the end
+        // Without this, sorted/reverse-sorted input causes O(n) recursion
+        // depth, which overflows the call stack at large n (e.g. 100,000)
+        int randomIndex = low + (int)(Math.random() * (high - low + 1));
+        swap(arr, randomIndex, high);   // Move random pivot to end (Lomuto scheme)
 
-        // Check if left child exists and is larger than current largest
-        if (left < n) {
-            comparisons++;
-            if (arr[left] > arr[largest]) largest = left;
+        int pivot = arr[high];
+        int i = low - 1;    // Tracks boundary of the "less-than" region
+
+        for (int j = low; j < high; j++) {
+            comparisons++;              // Compare current element to pivot
+            if (arr[j] <= pivot) {
+                i++;
+                swap(arr, i, j);        // Move element into left partition
+            }
         }
 
-        // Check if right child exists and is larger than current largest
-        if (right < n) {
-            comparisons++;
-            if (arr[right] > arr[largest]) largest = right;
-        }
-
-        // If the largest element is not the root, swap and continue heapifying
-        // down the affected subtree (recursive until heap property is restored)
-        if (largest != i) {
-            swap(arr, i, largest);
-            heapify(arr, n, largest);
-        }
+        // Place pivot between left (<= pivot) and right (> pivot) partitions
+        swap(arr, i + 1, high);
+        return i + 1;   // Return pivot's final sorted index
     }
 
     // -------------------------------------------------------------------------
     // Shared swap helper — swaps arr[i] and arr[j] and increments swap counter.
-    // Used by Quick Sort, Heap Sort, and their helper methods.
+    // Used by Quick Sort and its helper methods.
     // -------------------------------------------------------------------------
     private static void swap(int[] arr, int i, int j) {
         int temp = arr[i];
