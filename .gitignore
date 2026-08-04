@@ -1,10 +1,18 @@
-# Default ignored files
-/shelf/
-/.idea/workspace.xml
-# Ignored default folder with query files
-/queries/
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
-# Editor-based HTTP Client requests
-/httpRequests/
+# IntelliJ IDEA
+.idea/
+
+# Compiled output
+out/
+
+# IntelliJ generated files
+*.iml
+
+# Editor HTTP requests
+httpRequests/
+
+# IntelliJ shelves
+shelf/
+
+# IntelliJ data sources
+dataSources/
+dataSources.local.xml
