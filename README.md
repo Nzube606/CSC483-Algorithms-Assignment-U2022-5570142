@@ -1,162 +1,116 @@
-# CSC483-Algorithms-Assignment-U2022-5570142
-# 📘 Algorithms Assignment Repository
+# CSC483 Algorithms Assignment
 
-## 📌 Overview
-This repository contains two projects:
-1. Search Optimization Project
-2. Sorting Algorithms project
+## Overview
 
----
-# 🔹 Project 1: Search Optimization
+This repository contains two Java projects completed as part of the **CSC483 – Algorithms** course. The projects demonstrate the implementation, testing, and evaluation of fundamental algorithms and data structures, with an emphasis on algorithm efficiency, software testing, and object-oriented design.
 
-## Description
-This project focuses on optimizing search algorithms and comparing their efficiency.
+The repository is divided into two independent sections:
 
-## Algorithms Implemented
-- Linear Search
-- Binary Search
-- (Add any others you used)
-
-## Features
-- Performance comparison of search techniques
-- Analysis based on input size and structure
-- Optimization techniques applied
-
-## Compilation
-
-## Execution
-
-## 🧪 JUnit Testing
-
-JUnit 5 is used for testing.
-
-### 📌 Tested Features
-The following functionalities are tested:
-
-- Sequential search by product ID
-- Binary search by product ID
-- Hybrid search using name lookup (HashMap)
-- Sorted insertion in the hybrid product catalog
+* **Sorting Algorithm Performance Analysis**
+* **Search Optimization System**
 
 ---
 
-### 🔍 Test Description
+## Project 1: Sorting Algorithm Performance Analysis
 
-**Sequential Search**
-- Confirms that an existing product ID is found correctly
-- Ensures that searching for a non-existent ID returns `null`
+### Description
 
-**Binary Search**
-- Verifies correct operation on a sorted array
-- Confirms accurate retrieval of existing elements
-- Ensures proper handling of missing elements
+This project implements and evaluates multiple sorting algorithms using randomly generated datasets. The objective is to compare their performance and demonstrate the practical effects of algorithmic complexity.
 
-*Note: Binary search requires the array to be sorted before execution.*
+### Features
 
----
+* Implementation of multiple sorting algorithms
+* Random dataset generation for experiments
+* Performance evaluation across different input sizes
+* JUnit test suite for validating algorithm correctness
 
-**Hybrid Search (Name-Based)**
-- Tests fast lookup using a HashMap
-- Confirms products can be retrieved by name
-- Ensures non-existent names return `null`
+### Concepts Demonstrated
 
----
-
-**Sorted Insertion**
-- Verifies that `addProduct()` maintains sorted order internally
-- Confirms binary search works correctly after insertions
-- Tests insertion of elements in non-sorted order
+* Algorithm design
+* Time complexity analysis
+* Performance benchmarking
+* Experimental evaluation
+* Object-Oriented Programming
+* Software testing
 
 ---
 
-### ▶️ How to Run Tests
+## Project 2: Search Optimization
 
-1. Open the project in IntelliJ IDEA
-2. Navigate to:
-   src/test/java/Search_Optimization/
-3. Right-click on `ProductSearchTest`
-4. Click **Run 'ProductSearchTest'**
+### Description
 
----
+This project simulates a product catalog and explores search optimization techniques for efficiently locating products within a dataset.
 
-### ✅ Expected Result
+### Features
 
-All tests should pass successfully, confirming:
-- Correct implementation of search algorithms
-- Proper maintenance of sorted data
-- Reliable hybrid search functionality
+* Product catalog implementation
+* Search optimization logic
+* Modular object-oriented architecture
+* JUnit tests for validating search functionality
 
----
+### Concepts Demonstrated
 
-### 📊 Testing Importance
-
-These tests ensure that:
-- The algorithms are implemented correctly
-- Edge cases are handled properly
-- The system behaves reliably under different conditions
+* Searching algorithms
+* Data organization
+* Algorithm optimization
+* Object-Oriented Programming
+* Unit testing
 
 ---
 
+## Technologies Used
 
-# 🔹 Project 2: Sorting Algorithms project
-
-## Description
-This project evaluates the performance of multiple sorting algorithms using empirical analysis.
-
-## Algorithms Implemented
-- Insertion Sort
-- Merge Sort
-- Quick Sort
-
-## Features
-- Dataset generation (random, sorted, reverse, nearly sorted, duplicates)
-- Performance measurement (time, comparisons, swaps)
-- Statistical analysis (mean, standard deviation, t-test)
-- Decision tree for algorithm selection
-
-## Compilation
-
-## Execution
-
-## 🧪 Testing
-
-JUnit 5 is used for testing.
-
-### Test Coverage Includes:
-- Random datasets
-- Sorted datasets
-- Reverse sorted datasets
-- Nearly sorted datasets
-- Duplicate values
-- Edge cases (empty array, single element)
-
+* Java
+* JUnit 5
+* IntelliJ IDEA
 
 ---
 
-# 📦 Dependencies
+## Project Structure
 
-- Java (JDK 8 or higher)
-- (Optional) Apache Commons Math for statistical analysis
+```text
+src/
+├── Search_Optimization/
+│   ├── HybridProductCatalog.java
+│   ├── Main.java
+│   ├── Product.java
+│   ├── ProductSearch.java
+│   └── ProductSearchTest.java
+│
+└── Sorting/
+    ├── DataGenerator.java
+    ├── SortingAlgorithms.java
+    ├── SortingAlgorithmsTest.java
+    └── SortingExperiment.java
+```
+
+---
+
+## Learning Outcomes
+
+Through this project I gained practical experience with:
+
+* Implementing classic algorithms in Java
+* Comparing algorithm performance experimentally
+* Writing automated tests with JUnit
+* Organizing Java applications using object-oriented principles
+* Evaluating algorithm efficiency using empirical results
 
 ---
 
-# 🧪 Sample Usage
+## Future Improvements
 
-Run each project separately depending on the main class:
+Potential enhancements include:
 
----
-
-# ⚠️ Known Limitations
-
-- Results may vary depending on system performance
-- Limited dataset sizes tested
-- Statistical analysis based on small sample size
+* Additional sorting algorithms (Heap Sort, Radix Sort, Counting Sort)
+* Visualization of algorithm execution
+* Graphical presentation of performance results
+* Command-line interface for experiment configuration
 
 ---
 
-# 📊 Notes
+## Author
 
-- Both projects were implemented as part of an academic assignment
-- Emphasis was placed on empirical evaluation and algorithm efficiency
-
----
+**Ilodigwe Nzubechukwu**
+Final Year Computer Science Student
+University of Port Harcourt
